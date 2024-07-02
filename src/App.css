@@ -1,0 +1,23 @@
+body {
+    background-color: #538D4E;
+}
+
+/* Para Chrome, Safari, Edge y Opera */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Para Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.correct {
+    background-color: #538D4E;
+  }
+  
+.misplaced {
+    background-color: #B59F3B;
+  }
