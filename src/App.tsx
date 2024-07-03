@@ -1,24 +1,32 @@
 import "./App.css";
 import { useEffect, useRef, useState } from "react";
 import { generateRandomNumber } from "./utils/play";
+import Confetti from "react-confetti";
 import GuessBoxes from "./components/GuessBoxes";
 import SendSVG from "./components/SendSVG";
 
 function App() {
-    const randomNumber = generateRandomNumber();
-    const [randomNum, setRandomNum] = useState(randomNumber);
-
+    const [randomNum, setRandomNum] = useState(generateRandomNumber());
     const [number, setNumber] = useState<string | null>(null);
-    const [numbers, setNumbers] = useState<string[]>(Array(6).fill("")); // Pre-render 8 guess slots
+    const [numbers, setNumbers] = useState<string[]>(Array(6).fill(""));
     const [guessesLeft, setGuessesLeft] = useState(6);
     const [correct, setCorrect] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [confettiActive, setConfettiActive] = useState(false);
 
     const refInput = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         refInput.current?.focus();
     }, []);
+
+    useEffect(() => {
+        if (correct) {
+            setConfettiActive(true);
+            const timer = setTimeout(() => setConfettiActive(false), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [correct]);
 
     const tryAgainHandler = () => {
         setRandomNum(generateRandomNumber());
@@ -30,55 +38,42 @@ function App() {
     };
 
     const handleGuess = () => {
-        if (correct || guessesLeft <= 0) {
-            return; // Prevent further guesses if the game is over
-        }
+        if (correct || guessesLeft <= 0) return;
 
         if (!number || number.length !== 4) {
             setError("Please enter a 4-digit number.");
-            setNumber(""); // Clear input
-            clearErrorAfterDelay(); // Clear error after delay
-            return; // Ensure number has 4 digits before proceeding
+            resetNumber();
+            return;
         }
 
         if (hasRepeatedDigits(number)) {
             setError("You must type 4 different numbers. Try again.");
-            setNumber(""); // Clear input
-            clearErrorAfterDelay(); // Clear error after delay
-            return; // Ensure number does not have repeated digits
+            resetNumber();
+            return;
         }
 
-        const newNumbers = [...numbers];
-        newNumbers[6 - guessesLeft] = number; // Update the current guess slot
+        updateNumbers(number);
+        if (randomNum.toString() === number) setCorrect(true);
 
-        setGuessesLeft((prevGuessesLeft) => prevGuessesLeft - 1);
-        setNumbers(newNumbers);
-        setNumber("");
-        setError(null);
-
-        if (randomNum.toString() === number) {
-            setCorrect(true);
-        }
         refInput.current?.focus();
     };
 
+    const resetNumber = () => {
+        setNumber("");
+        clearErrorAfterDelay();
+    };
+
     const clearErrorAfterDelay = () => {
-        setTimeout(() => {
-            setError(null);
-        }, 3000);
+        setTimeout(() => setError(null), 5000);
     };
 
     const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") {
-            handleGuess();
-        }
+        if (e.key === "Enter") handleGuess();
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        if (value.length <= 4) {
-            setNumber(value);
-        }
+        if (value.length <= 4 && /^[0-9]*$/.test(value)) setNumber(value);
     };
 
     const hasRepeatedDigits = (num: string) => {
@@ -86,19 +81,31 @@ function App() {
         return new Set(digits).size !== digits.length;
     };
 
-    console.log(randomNum);
+    const updateNumbers = (number: string) => {
+        const newNumbers = [...numbers];
+        newNumbers[6 - guessesLeft] = number;
+        setNumbers(newNumbers);
+        setNumber("");
+        setError(null);
+        setGuessesLeft((prev) => prev - 1);
+    };
 
     return (
         <div className=" bg-fourBlue flex justify-center min-h-screen">
             <div className="flex flex-col gap-4 py-10 w-[420px] border outline outline-fourWhite -outline-offset-8">
-                <h1 className="text-2xl font-bold text-center uppercase text-fourWhite">
-                    Perfect Four <br /> <span className="text-fourGreen text-lg">By Pila</span>
-                </h1>
+                <div className="text-center font-bold w-full py-4">
+                    <h1 className="text-2xl uppercase text-fourWhite">
+                        Perfect Four
+                    </h1>
+                    <p className="text-fourGreen text-lg leading-3  text-right pr-32">
+                        By Pila
+                    </p>
+                </div>
 
-                <div className="flex px-[86px]">
+                <div className="flex px-[86px] my-4">
                     <input
                         className="no-arrows h-14 w-full text-center outline-none bg-fourWhite text-fourBlue font-semibold"
-                        type="number"
+                        type="text"
                         placeholder="Type here..."
                         value={number || ""}
                         onChange={handleChange}
@@ -127,22 +134,23 @@ function App() {
                 </div>
 
                 {correct && (
-                    <div className="text-center text-fourWhite">
-                        <p>YOU WIN!</p>
+                    <div className="text-center text-fourWhite mt-4">
+                        <p className="text-2xl font-bold">🎉 YOU WIN! 🎉</p>
                         <button
                             onClick={tryAgainHandler}
                             className="py-2 px-8 bg-fourGreen text-fourWhite font-semibold mt-4"
                         >
                             Try Again
                         </button>
+                        {confettiActive && <Confetti />}
                     </div>
                 )}
                 {guessesLeft === 0 && !correct && (
-                    <div className="text-center text-fourWhite">
-                        <p>YOU LOSE!</p>
+                    <div className="text-center text-fourWhite mt-4">
+                        <p className="text-2xl font-bold">YOU LOSE!</p>
                         <button
                             onClick={tryAgainHandler}
-                            className="py-2 px-8 bg-fourGreen text-fourWhite font-semibold mt-4"
+                            className="py-2 px-8 bg-fourYellow text-fourWhite font-semibold mt-4"
                         >
                             Try Again
                         </button>
