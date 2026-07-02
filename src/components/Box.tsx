@@ -2,20 +2,34 @@ type TBoxProps = {
     num: string;
     numToGuessSplit: string;
     numToGuess: string[];
+    shouldReveal: boolean;
+    isSubmitted: boolean;
+    index: number;
 };
 
-const Box = ({ num, numToGuessSplit, numToGuess }: TBoxProps) => {
-    console.log({ num, numToGuessSplit, numToGuess });
-    
-    const addClass =
-        num === numToGuessSplit
-            ? "correct"
-            : numToGuess.includes(num)
-            ? "misplaced"
-            : "";
+const Box = ({
+    num,
+    numToGuessSplit,
+    numToGuess,
+    shouldReveal,
+    isSubmitted,
+    index,
+}: TBoxProps) => {
+    const stateClass = !isSubmitted
+        ? "empty"
+        : num === numToGuessSplit
+        ? "correct"
+        : numToGuess.includes(num)
+        ? "misplaced"
+        : "wrong";
+
     return (
         <div
-            className={`${addClass} text-3xl text-fourWhite w-14 h-14 flex items-center justify-center border`}
+            className={`${stateClass} tile ${shouldReveal ? "tile-reveal" : ""} ${
+                !isSubmitted && num.trim() ? "typed-digit" : ""
+            }`}
+            style={{ animationDelay: shouldReveal ? `${index * 120}ms` : undefined }}
+            aria-label={isSubmitted ? `${num}, ${stateClass}` : "Empty digit"}
         >
             {num}
         </div>

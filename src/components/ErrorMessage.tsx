@@ -5,7 +5,7 @@ interface ErrorMessageProps {
 }
 
 const ErrorMessage: React.FC<ErrorMessageProps> = ({ error }) => (
-    <p className="text-red-500 font-bold text-center absolute bottom-3 right-3 bg-fourWhite py-4 px-6">
+    <p className="toast-message" role="alert" aria-live="polite">
         {error}
     </p>
 );
